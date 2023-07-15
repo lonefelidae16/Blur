@@ -6,10 +6,13 @@ import ladysnake.satin.api.event.ShaderEffectRenderCallback;
 import ladysnake.satin.api.managed.ManagedShaderEffect;
 import ladysnake.satin.api.managed.ShaderEffectManager;
 import ladysnake.satin.api.managed.uniform.Uniform1f;
+import ladysnake.satin.api.managed.uniform.UniformMat4;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
+import org.joml.Matrix4f;
 
 import java.util.Objects;
 
@@ -24,6 +27,8 @@ public class Blur implements ClientModInitializer {
     private static final ManagedShaderEffect blur = ShaderEffectManager.getInstance().manage(new Identifier(MODID, "shaders/post/fade_in_blur.json"),
             shader -> shader.setUniformValue("Radius", (float) BlurConfig.radius));
     private static final Uniform1f blurProgress = blur.findUniform1f("Progress");
+    private static final UniformMat4 GAUSSIAN_KERNEL = blur.findUniformMat4("Kernel");
+    private static int currentRadius = 0;
 
     @Override
     public void onInitializeClient() {
@@ -31,7 +36,31 @@ public class Blur implements ClientModInitializer {
 
         ShaderEffectRenderCallback.EVENT.register((deltaTick) -> {
             if (start > 0) {
-                blurProgress.set(getProgress(client.currentScreen != null));
+                float progress = getProgress(client.currentScreen != null);
+                blurProgress.set(progress);
+                int progRadius = MathHelper.floor(progress * BlurConfig.radius);
+                if (currentRadius != progRadius && progRadius > 0) {
+                    // Re-calculation for Kernel
+                    currentRadius = progRadius;
+                    float[] weight = new float[16];
+                    float peak = 0;
+                    int strength = progRadius * progRadius + 1;
+                    for (int i = 0; i < weight.length; ++i) {
+                        float r = 1f + 2f * i;
+                        float w = (float) Math.exp(-0.5 * (r * r) / strength);
+                        weight[i] = w;
+                        if (i > 0) {
+                            w *= 2f;
+                        }
+                        peak += w;
+                    }
+                    for (int i = 0; i < weight.length; ++i) {
+                        weight[i] /= peak;
+                    }
+                    Matrix4f mat4 = new Matrix4f();
+                    mat4.set(weight);
+                    GAUSSIAN_KERNEL.set(mat4);
+                }
                 blur.render(deltaTick);
             }
         });

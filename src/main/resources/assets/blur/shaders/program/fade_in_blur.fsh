@@ -10,26 +10,25 @@ uniform vec2 InSize;
 uniform vec2 BlurDir;
 uniform float Radius;
 uniform float Progress;
+uniform mat4 Kernel;
 
 out vec4 fragColor;
 
 void main() {
-    vec4 blurred = vec4(0.0);
-    float totalStrength = 0.0;
-    float totalAlpha = 0.0;
-    float totalSamples = 0.0;
-    float progRadius = floor(Radius * Progress);
-    for(float r = -progRadius; r <= progRadius; r += 1.0) {
-        vec4 sample = texture(DiffuseSampler, texCoord + oneTexel * r * BlurDir);
-
-		// Accumulate average alpha
-        totalAlpha = totalAlpha + sample.a;
-        totalSamples = totalSamples + 1.0;
-
-		// Accumulate smoothed blur
-        float strength = 1.0 - abs(r / progRadius);
-        totalStrength = totalStrength + strength;
-        blurred = blurred + sample;
+    int progRadius = int(floor(Radius * Progress));
+    if (progRadius == 0) {
+        fragColor = texture(DiffuseSampler, texCoord);
+        return;
     }
-    fragColor = vec4(blurred.rgb / (progRadius * 2.0 + 1.0), totalAlpha);
+
+    vec3 blurred = vec3(0.0);
+    float totalAlpha = 0.0;
+    for (int r = -15; r < 16; ++r) {
+        int kx = abs(r / 4);
+        int ky = abs(r % 4);
+        vec4 sample = texture(DiffuseSampler, texCoord + oneTexel * BlurDir * (r / 2.0));
+        blurred += sample.rgb * Kernel[kx][ky];
+        totalAlpha += sample.a;
+    }
+    fragColor = vec4(blurred, totalAlpha);
 }
