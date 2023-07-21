@@ -4,62 +4,46 @@
     ],
     "passes": [
         {
-            "name": "blur:fade_in_blur",
+            "name": "blur:gauss_filter_k31",
             "intarget": "minecraft:main",
             "outtarget": "swap",
             "uniforms": [
                 {
                     "name": "BlurDir",
                     "values": [ 1.0, 0.0 ]
-                },
-                {
-                    "name": "Radius",
-                    "values": [ 8.0 ]
                 }
             ]
         },
         {
-            "name": "blur:fade_in_blur",
+            "name": "blur:gauss_filter_k31",
             "intarget": "swap",
             "outtarget": "minecraft:main",
             "uniforms": [
                 {
                     "name": "BlurDir",
                     "values": [ 0.0, 1.0 ]
-                },
-                {
-                    "name": "Radius",
-                    "values": [ 8.0 ]
                 }
             ]
         },
         {
-            "name": "blur:fade_in_blur",
+            "name": "blur:smooth_filter",
             "intarget": "minecraft:main",
             "outtarget": "swap",
             "uniforms": [
                 {
                     "name": "BlurDir",
                     "values": [ 1.0, 0.0 ]
-                },
-                {
-                    "name": "Radius",
-                    "values": [ 8.0 ]
                 }
             ]
         },
         {
-            "name": "blur:fade_in_blur",
+            "name": "blur:smooth_filter",
             "intarget": "swap",
             "outtarget": "minecraft:main",
             "uniforms": [
                 {
                     "name": "BlurDir",
                     "values": [ 0.0, 1.0 ]
-                },
-                {
-                    "name": "Radius",
-                    "values": [ 8.0 ]
                 }
             ]
         }
